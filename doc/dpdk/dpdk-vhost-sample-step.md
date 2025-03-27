@@ -28,7 +28,7 @@ Common problem:
     1. portmask mismatch, use -- -p to adjust
     1. IOMMU group issue
         1. adjust IOMMU group by moving hardware into the correct PCI slot
-        1. For demo just use no-iommu-mode. Reading: linux_drivers.html#vfio-no-iommu-mode
+        1. For demo just use no-iommu-mode. Reading: linux_drivers.html#vfio-no-iommu-mode (Outdated No longer working in newer kernel)
 5. Start Qemu
 ```bash
 qemu-system-x86_64 \
