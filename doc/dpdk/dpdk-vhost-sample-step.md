@@ -1,14 +1,11 @@
 1. Install Dependency
+Kernel Version(Linux 6.12.19-1-lts x86_64)
 ```bash
 sudo apt install -y meson ninja-build python3-pyelftools libnuma-dev pkg-config
 git clone https://github.com/DPDK/dpdk.git
 cd dpdk
-git checkout v22.11
-meson setup -Dplatform=generic \
-    -Dexamples=all \
-    -Ddrivers=net/hinic \
-    -Denable_kmods=true \
-    build
+git checkout v24.11
+meson setup -Dexamples=all build
 ninja -C build install
 ldconfig
 ```
@@ -27,6 +24,11 @@ ldconfig
     --vdev 'net_vhost1,iface=/tmp/vm2.sock,vlan=200' \
     -- --stats 1
 ```
+Common problem:
+    1. portmask mismatch, use -- -p to adjust
+    1. IOMMU group issue
+        1. adjust IOMMU group by moving hardware into the correct PCI slot
+        1. For demo just use no-iommu-mode. Reading: linux_drivers.html#vfio-no-iommu-mode
 5. Start Qemu
 ```bash
 qemu-system-x86_64 \
@@ -45,15 +47,17 @@ qemu-system-x86_64 \
     -chardev socket,id=char0,path=/tmp/vm1.sock,server=on \
     -device virtio-net-pci,netdev=net0,mac={virtio mac} \
 ```
-6. VM handle vlan tag
-```bash
-# VM1
-ip link add link eth0 name eth0.100 type vlan id 100
-ip addr add 192.168.100.2/24 dev eth0.100
-# VM2
-ip link add link eth0 name eth0.200 type vlan id 200
-ip addr add 192.168.200.2/24 dev eth0.200
-```
+6. Test
+    1. VM handle vlan tag
+    ```bash
+    # VM1
+    ip link add link eth0 name eth0.100 type vlan id 100
+    ip addr add 192.168.100.2/24 dev eth0.100
+    # VM2
+    ip link add link eth0 name eth0.200 type vlan id 200
+    ip addr add 192.168.200.2/24 dev eth0.200
+    ```
+    1. use dpdk-testpmd to send packet to host
 7. Change vhost to use HW NIC(Need verification)
 ```C
 struct rte_eth_conf port_conf = {
